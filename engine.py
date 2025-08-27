@@ -3,25 +3,35 @@
 import json
 import os
 from typing import Generator, Iterable, Optional
-
 import requests
 
+from logger import logger
+
+# MODEL = "qwen2.5:0.5b"
+MODEL = "gpt-oss:20b"
+TERMINAL_LOGGING = True
+SYSTEM_PROMPT = "You are a helpful assistant."
+
 def load_file_card(file_path):
-    with open(file_path, 'r') as file:
+    with open('file_cards/' + file_path, 'r') as file:
         return file.read()
     
 
 def call_llm(
     prompt: str,
-    system_prompt: str = "You are a helpful assistant.",
+    system_prompt: str = SYSTEM_PROMPT,
     method: str = "ollama",                   # Default to Ollama
     # model: str = "gpt-oss:20b",               # Default to gpt-oss:20b
-    model: str = "qwen2.5:0.5b",              # Test with qwen2.5:0.5b
-    temperature: float = 0.7,
+    model: str = MODEL,
+    temperature: float = 0.5,
     max_tokens: int = 512,
     stream: bool = True,
     base_url: str = "http://localhost:11434", # Default to Ollama
 ):
+    
+    if TERMINAL_LOGGING:
+        logger.user_log(prompt)
+    
     if method.lower() != "ollama":
         raise NotImplementedError(f"Unsupported method: {method}")
 
@@ -73,8 +83,25 @@ def call_llm(
 
 
 def print_stream(generator: Iterable[str]):
-    for delta in generator:
-        print(delta, end="", flush=True)
+    if TERMINAL_LOGGING:
+        logger.llm_log(generator, stream=True)
+    else:
+        for delta in generator:
+            print(delta, end="", flush=True)
 
 if __name__ == "__main__":
-    print_stream(call_llm("Why is the sky blue?"))
+    print()
+
+    # logger.error_log("Test error...")
+    logger.set_model(MODEL)
+
+    SYSTEM_PROMPT = load_file_card("test.txt")
+
+    logger.system_log(f"Loaded SYSTEM PROMPT: {SYSTEM_PROMPT}\n")
+
+    print_stream(call_llm(
+        prompt="Why is the sky blue?",
+        system_prompt=SYSTEM_PROMPT
+    ))
+    
+    print()

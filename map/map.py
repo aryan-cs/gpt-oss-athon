@@ -1,0 +1,1 @@
+print("Map initialized.")
