@@ -20,6 +20,10 @@ Or, watch it:
 
 Annd much more!
 
+## Flexibility
+
+For security, we designed Secratary to be a fully autonomous local agent. That is, all data is stored locally & the entire system runs on your hardware at home. No GPU? No worries. Secratary has a lightweight option, leveraging `gpt-oss:20b` for thinking and the `base` Whisper model for speech recognition. 
+
 ## To-Do 
 - [x] Implement text-to-speech  
 - [x] Implement speech-to-text  
