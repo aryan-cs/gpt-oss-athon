@@ -28,7 +28,13 @@ STT_ADJUST_DURATION: float = 0.25  # seconds to calibrate ambient noise
 CAPTURE_ENABLED: bool = True  # gate to drop recognitions when disabled
 
 # Whisper settings
-STT_WHISPER_MODEL: str = "tiny.en"  # tiny.en for English per request
+STT_WHISPER_MODEL: str = "base.en"  # tiny.en for English per request
+# Other models:
+# - tiny.en
+# - base.en
+# - small.en
+# - medium.en
+
 STT_WHISPER_DEVICE: str = "cpu"  # "cpu" or "cuda"
 
 # Internal model caches

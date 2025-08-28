@@ -83,7 +83,7 @@ def _voice_menu() -> None:
 
 
 def main() -> int:
-    logger.system_log("Starting continuous chat. Type '/bye' to stop.")
+    logger.system_log("Starting continuous chat. Say 'Goodbye' to stop.")
     logger.set_model(MODEL)
 
     tts_available = bool(_output_mod and getattr(_output_mod, "is_tts_available", lambda: False)())
@@ -96,7 +96,7 @@ def main() -> int:
     if stt_available:
         try:
             if _input_mod and hasattr(_input_mod, "set_stt_config"):
-                _input_mod.set_stt_config(engine="whisper", whisper_model="tiny.en", whisper_device="cpu")
+                _input_mod.set_stt_config(engine="whisper", whisper_model="base.en", whisper_device="cpu")
                 if hasattr(_input_mod, "preload_stt_models"):
                     _input_mod.preload_stt_models()
         except Exception:
@@ -217,7 +217,7 @@ def main() -> int:
             pass
 
         cmd = user.strip().lower()
-        if cmd in {"/bye"}:
+        if cmd in {"/bye"} or "goodbye" in cmd or "exit" in cmd or "quit" in cmd:
             break
 
         if cmd.startswith("/voice") or "voice menu" in cmd or cmd == "voice":
