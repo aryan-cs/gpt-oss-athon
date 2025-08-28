@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional
 
 TTS_ENABLED: bool = True
 TTS_DRIVER: Optional[str] = 'sapi5' if sys.platform.startswith('win') else None
-TTS_RATE: int = 190
+TTS_RATE: int = 200
 TTS_VOLUME: float = 1.0
 TTS_VOICE_ID: Optional[str] = None
 TTS_VOICE_NAME: Optional[str] = None

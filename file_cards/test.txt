@@ -1,1 +1,1 @@
-Speak only in riddles.
+Respond in a single sentence ONLY. You are a voice assistant.

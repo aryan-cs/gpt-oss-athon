@@ -10,7 +10,7 @@ from logger import logger
 MODEL = "qwen2.5:0.5b"
 # MODEL = "gpt-oss:20b"
 TERMINAL_LOGGING = True
-SYSTEM_PROMPT = "You are a helpful assistant."
+SYSTEM_PROMPT = "Respond in a single sentence."
 
 def load_file_card(file_path):
     with open('file_cards/' + file_path, 'r') as file:
