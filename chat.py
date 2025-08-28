@@ -1,73 +1,32 @@
-import os
 import sys
-import threading
-import time
-from queue import Queue, Empty
-from typing import Optional, Generator, Iterable
+from typing import Iterable, Generator
 
 from engine import ChatSession, SYSTEM_PROMPT, MODEL
 from logger import logger, styles
 
-# TTS setup
-_tts_engine = None
-_tts_init_error = None
+import importlib.util
+from pathlib import Path
 
-def _get_tts_engine():
-    global _tts_engine, _tts_init_error
-    if _tts_engine is not None:
-        return _tts_engine
-    
-    try:
-        import pyttsx3
-        _tts_engine = pyttsx3.init()
-        # Set volume to maximum for better audibility
-        _tts_engine.setProperty('volume', 1.0)
-        return _tts_engine
-    except Exception as e:
-        _tts_init_error = str(e)
-        return None
-
-def speak_text(text: str) -> bool:
-    """Speak the given text using TTS. Returns True if successful.
-    Use a fresh engine per call to avoid state issues across turns.
-    """
-    if not text.strip():
-        return False
-    try:
-        import pyttsx3
-        engine = pyttsx3.init(driverName='sapi5') if sys.platform.startswith('win') else pyttsx3.init()
-        engine.setProperty('volume', 1.0)
-        try:
-            engine.setProperty('rate', 190)
-        except Exception:
-            pass
-        engine.say(text)
-        engine.runAndWait()
-        try:
-            engine.stop()
-        except Exception:
-            pass
-        return True
-    except Exception:
-        return False
-
-def is_tts_available() -> bool:
-    """Check if TTS is actually working by trying to initialize it."""
-    return _get_tts_engine() is not None
+_output_mod = None
+try:
+    _output_path = Path(__file__).resolve().parent / "io" / "output.py"
+    _spec = importlib.util.spec_from_file_location("app_output", str(_output_path))
+    if _spec and _spec.loader:
+        _output_mod = importlib.util.module_from_spec(_spec)
+        _spec.loader.exec_module(_output_mod)
+except Exception:
+    _output_mod = None
 
 
 def main() -> int:
     logger.system_log("Starting continuous chat. Type '/bye' to stop.")
     logger.set_model(MODEL)
-    
-    tts_available = is_tts_available()
+
+    tts_available = bool(_output_mod and getattr(_output_mod, "is_tts_available", lambda: False)())
     if tts_available:
         logger.system_log("TTS enabled - responses will be spoken after generation.")
     else:
-        if _tts_init_error:
-            logger.system_log(f"TTS not available: {_tts_init_error}")
-        else:
-            logger.system_log("TTS not available - pyttsx3 not installed.")
+        logger.system_log("TTS not available - pyttsx3 not installed.")
 
     session = ChatSession(
         system_prompt=SYSTEM_PROMPT,
@@ -87,23 +46,71 @@ def main() -> int:
         if cmd in {"/bye"}:
             break
 
+        if cmd == "/voice":
+            if not _output_mod or not getattr(_output_mod, "is_tts_available", lambda: False)():
+                logger.system_log("TTS not available - cannot open voice menu.")
+                continue
+            try:
+                voices = _output_mod.list_voices()
+            except Exception:
+                voices = []
+            if not voices:
+                logger.system_log("No voices found.")
+                continue
+
+            idx = 0
+            total = len(voices)
+            logger.system_log("Voice menu: (n)ext, (p)rev, (t)est, (s)elect, (q)uit")
+            while True:
+                v = voices[idx]
+                vid = str(v.get('id'))
+                vname = str(v.get('name'))
+                logger.system_log(f"[{idx+1}/{total}] {vname} | {vid}")
+                try:
+                    choice = input(f"{styles.RESET}{styles.GRAY}[voice] (n/p/t/s/q) > {styles.ITALICS}").strip().lower()
+                except (EOFError, KeyboardInterrupt):
+                    print()
+                    break
+                if choice in {"q", "quit"}:
+                    break
+                if choice in {"n", "next"}:
+                    idx = (idx + 1) % total
+                    continue
+                if choice in {"p", "prev", "previous"}:
+                    idx = (idx - 1) % total
+                    continue
+                if choice in {"t", "test"}:
+                    try:
+                        _output_mod.speak(f"Testing {vname}")
+                    except Exception:
+                        logger.system_log("Failed to speak test sample.")
+                    continue
+                if choice in {"s", "select"}:
+                    try:
+                        _output_mod.set_tts_config(voice_id=vid, voice_name=None)
+                        logger.system_log(f"Selected voice: {vname}")
+                    except Exception:
+                        logger.system_log("Failed to set voice.")
+                    break
+            continue
+
         gen = session.ask_stream(user)
-        
-        # Capture the response while streaming for TTS
-        response_chunks = []
+
+        collected: list[str] = []
         def capture_and_yield(stream: Iterable[str]) -> Generator[str, None, None]:
             for chunk in stream:
-                response_chunks.append(chunk)
+                collected.append(chunk)
                 yield chunk
-        
-        # Stream the response to console
+
         logger.llm_log(capture_and_yield(gen), stream=True)
-        
-        # Speak the full response after streaming completes
-        if tts_available and response_chunks:
-            full_response = "".join(response_chunks)
-            if full_response.strip():
-                speak_text(full_response)
+
+        if tts_available and collected and _output_mod:
+            full_text = "".join(collected)
+            if full_text.strip():
+                try:
+                    _output_mod.speak(full_text)
+                except Exception:
+                    pass
 
     logger.system_log("Chat ended.")
     return 0
