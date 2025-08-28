@@ -1,12 +1,12 @@
-# Secratary
+# Secretary
 
 Designed for the [OpenAI Open Model Hackathon](https://openai.devpost.com/).
 
-Over the course of ~2 weeks, we designed an end-to-end smart agent capable of streamlining one's life by acting as a personal, day-to-day secratary. Powered by OpenAI's Whisper and other open-source engines, Secratary has the ability to listen, learn, and communicate. Our novel approach to agentic systems also includes custom algorithms develped in-house to improve the reliability & breadth of Secratary's features.
+Over the course of ~2 weeks, we designed an end-to-end smart agent capable of streamlining one's life by acting as a personal, day-to-day Secretary. Powered by OpenAI's Whisper and other open-source engines, Secretary has the ability to listen, learn, and communicate. Our novel approach to agentic systems also includes custom algorithms develped in-house to improve the reliability & breadth of Secretary's features.
 
 ## Features & Functionality
 
-Secratary can listen, speak, and create a personal understanding of you through a custom context-aware portfolio it develops based on your interactions & schedule. Try asking it to do things like:
+Secretary can listen, speak, and create a personal understanding of you through a custom context-aware portfolio it develops based on your interactions & schedule. Try asking it to do things like:
 
 - Plan your day-to-day activities
 - Help you with homework
@@ -22,7 +22,7 @@ Annd much more!
 
 ## Flexibility
 
-For security, we designed Secratary to be a fully autonomous local agent. That is, all data is stored locally & the entire system runs on your hardware at home. No GPU? No worries. Secratary has a lightweight option, leveraging `gpt-oss:20b` for thinking and the `base` Whisper model for speech recognition. 
+For security, we designed Secretary to be a fully autonomous local agent. That is, all data is stored locally & the entire system runs on your hardware at home. No GPU? No worries. Secretary has a lightweight option, leveraging `gpt-oss:20b` for thinking and the `base` Whisper model for speech recognition. 
 
 ## To-Do 
 - [x] Implement text-to-speech  
