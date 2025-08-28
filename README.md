@@ -21,10 +21,10 @@ Or, watch it:
 Annd much more!
 
 ## To-Do 
-[x] Implement text-to-speech  
-[x] Implement speech-to-text  
-[ ] Implement history & context portfolio building  
-[ ] Implement Map functionality  
-[ ] Implement To-Do functionality  
-[ ] Develop custom hardware  
-[ ] Implement custom hardware control  
+- [x] Implement text-to-speech  
+- [x] Implement speech-to-text  
+- [ ] Implement history & context portfolio building  
+- [ ] Implement Map functionality  
+- [ ] Implement To-Do functionality  
+- [ ] Develop custom hardware  
+- [ ] Implement custom hardware control  
