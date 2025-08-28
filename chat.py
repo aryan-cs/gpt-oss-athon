@@ -1,3 +1,4 @@
+import os
 import sys
 from typing import Optional
 
@@ -6,7 +7,7 @@ from logger import logger, styles
 
 
 def main() -> int:
-    logger.system_log("Starting continuous chat. Type '/bye' to stop.")
+    logger.system_log("Starting continuous chat. Type '/bye' to stop.\n")
     logger.set_model(MODEL)
 
     session = ChatSession(
@@ -24,7 +25,7 @@ def main() -> int:
 
         if user.strip().lower() in {"/bye"}:
             break
-        
+
         gen = session.ask_stream(user)
         print_stream(gen)
 

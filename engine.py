@@ -164,11 +164,13 @@ if __name__ == "__main__":
     logger.set_model(MODEL)
 
     SYSTEM_PROMPT = load_file_card("test.txt")
+    TEST_QUERY = "What is the capital of France?"
 
     logger.system_log(f"Loaded SYSTEM PROMPT: {SYSTEM_PROMPT}\n")
+    logger.user_log(TEST_QUERY)
 
     print_stream(call_llm(
-        prompt="Tell me the story of little red riding hood.",
+        prompt=TEST_QUERY,
         system_prompt=SYSTEM_PROMPT
     ))
     
