@@ -2,13 +2,13 @@
 
 import json
 import os
-from typing import Generator, Iterable, Optional
+from typing import Generator, Iterable, Optional, List, Dict, Union
 import requests
 
 from logger import logger
 
-# MODEL = "qwen2.5:0.5b"
-MODEL = "gpt-oss:20b"
+MODEL = "qwen2.5:0.5b"
+# MODEL = "gpt-oss:20b"
 TERMINAL_LOGGING = True
 SYSTEM_PROMPT = "You are a helpful assistant."
 
@@ -16,6 +16,9 @@ def load_file_card(file_path):
     with open('file_cards/' + file_path, 'r') as file:
         return file.read()
     
+
+Message = Dict[str, str]
+
 
 def call_llm(
     prompt: str,
@@ -27,10 +30,8 @@ def call_llm(
     max_tokens: int = 512,
     stream: bool = True,
     base_url: str = "http://localhost:11434", # Default to Ollama
+    history: Optional[List[Message]] = None,
 ):
-    
-    if TERMINAL_LOGGING:
-        logger.user_log(prompt)
     
     if method.lower() != "ollama":
         raise NotImplementedError(f"Unsupported method: {method}")
@@ -38,9 +39,18 @@ def call_llm(
     base = base_url or os.getenv("OLLAMA_HOST", "http://localhost:11434")
     url = f"{base.rstrip('/')}/api/chat"
 
-    messages = []
+    messages: List[Message] = []
     if system_prompt:
         messages.append({"role": "system", "content": system_prompt})
+    if history:
+        for m in history:
+            role = m.get("role")
+            content = m.get("content")
+            if not isinstance(role, str) or not isinstance(content, str):
+                continue
+            if role not in {"user", "assistant", "system"}:
+                continue
+            messages.append({"role": role, "content": content})
     messages.append({"role": "user", "content": prompt})
 
     payload = {
@@ -82,6 +92,64 @@ def call_llm(
             return msg.get("content", "")
 
 
+class ChatSession:
+    def __init__(
+        self,
+        *,
+        system_prompt: str = SYSTEM_PROMPT,
+        model: str = MODEL,
+        base_url: str = "http://localhost:11434",
+        temperature: float = 0,
+        max_tokens: int = 512,
+        terminal_logging: bool = True,
+    ) -> None:
+        self.system_prompt = system_prompt
+        self.model = model
+        self.base_url = base_url
+        self.temperature = temperature
+        self.max_tokens = max_tokens
+        self.terminal_logging = terminal_logging
+        self.history: List[Message] = []
+
+    def ask_stream(self, prompt: str) -> Generator[str, None, None]:
+        def _gen() -> Generator[str, None, None]:
+            chunks: List[str] = []
+            gen = call_llm(
+                prompt,
+                system_prompt=self.system_prompt,
+                method="ollama",
+                model=self.model,
+                temperature=self.temperature,
+                max_tokens=self.max_tokens,
+                stream=True,
+                base_url=self.base_url,
+                history=self.history,
+            )
+            for delta in gen:
+                chunks.append(delta)
+                yield delta
+            self.history.append({"role": "user", "content": prompt})
+            self.history.append({"role": "assistant", "content": "".join(chunks)})
+        return _gen()
+
+    def ask(self, prompt: str) -> str:
+        reply = call_llm(
+            prompt,
+            system_prompt=self.system_prompt,
+            method="ollama",
+            model=self.model,
+            temperature=self.temperature,
+            max_tokens=self.max_tokens,
+            stream=False,
+            base_url=self.base_url,
+            history=self.history,
+        )
+        assert isinstance(reply, str)
+        self.history.append({"role": "user", "content": prompt})
+        self.history.append({"role": "assistant", "content": reply})
+        return reply
+
+
 def print_stream(generator: Iterable[str]):
     if TERMINAL_LOGGING:
         logger.llm_log(generator, stream=True)
@@ -100,7 +168,7 @@ if __name__ == "__main__":
     logger.system_log(f"Loaded SYSTEM PROMPT: {SYSTEM_PROMPT}\n")
 
     print_stream(call_llm(
-        prompt="Why is the sky blue?",
+        prompt="Tell me the story of little red riding hood.",
         system_prompt=SYSTEM_PROMPT
     ))
     
